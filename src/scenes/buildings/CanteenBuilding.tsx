@@ -45,8 +45,8 @@ const CanteenBuilding = ({ canteen }: Props) => {
         />
       </mesh>
 
-      <mesh position={[0, 4.3, 0]}>
-        <coneGeometry args={[5.5, 1.5, 4]} rotation={[0, Math.PI / 4, 0]} />
+      <mesh position={[0, 4.3, 0]} rotation={[0, Math.PI / 4, 0]}>
+        <coneGeometry args={[5.5, 1.5, 4]} />
         <meshStandardMaterial color="#8B0000" />
       </mesh>
 

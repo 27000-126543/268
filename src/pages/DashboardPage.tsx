@@ -1,8 +1,10 @@
+import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import Header from '../components/layout/Header';
 import Sidebar from '../components/layout/Sidebar';
 import StatusBar from '../components/layout/StatusBar';
 import InfoPanel from '../components/panels/InfoPanel';
+import PurchaseApprovalPanel from '../components/panels/PurchaseApprovalPanel';
 import SoldierDetailModal from '../components/modals/SoldierDetailModal';
 import CampusScene from '../scenes/CampusScene';
 import { useEmergencyStore } from '../store/useEmergencyStore';
@@ -12,13 +14,14 @@ import { AlertTriangle } from 'lucide-react';
 const DashboardPage = () => {
   const { drill, notifications } = useEmergencyStore();
   const { selectedSoldier } = usePersonnelStore();
+  const [showPurchaseApproval, setShowPurchaseApproval] = useState(false);
 
   return (
     <div className="w-full h-full flex flex-col bg-background-dark">
       <Header />
 
       <div className="flex-1 flex overflow-hidden relative">
-        <Sidebar />
+        <Sidebar onOpenPurchaseApproval={() => setShowPurchaseApproval(true)} />
 
         <main className="flex-1 relative">
           <CampusScene />
@@ -71,6 +74,12 @@ const DashboardPage = () => {
       <StatusBar />
 
       <SoldierDetailModal />
+
+      <AnimatePresence>
+        {showPurchaseApproval && (
+          <PurchaseApprovalPanel onClose={() => setShowPurchaseApproval(false)} />
+        )}
+      </AnimatePresence>
     </div>
   );
 };

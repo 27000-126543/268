@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   Building2, Target, Shield, UtensilsCrossed,
-  AlertTriangle, Users, Play, Square, Download
+  AlertTriangle, Users, Play, Square, Download, FileText
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/useAuthStore';
@@ -16,7 +16,11 @@ interface MenuItem {
   permission?: keyof typeof ROLE_PERMISSIONS['班长'];
 }
 
-const Sidebar = () => {
+interface Props {
+  onOpenPurchaseApproval?: () => void;
+}
+
+const Sidebar = ({ onOpenPurchaseApproval }: Props) => {
   const navigate = useNavigate();
   const { currentUser } = useAuthStore();
   const { drill, startDrill, endDrill } = useEmergencyStore();
@@ -60,6 +64,19 @@ const Sidebar = () => {
         ))}
 
       <div className="flex-1" />
+
+      {onOpenPurchaseApproval && (
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={onOpenPurchaseApproval}
+          className="w-14 h-14 rounded-xl flex flex-col items-center justify-center gap-1 text-orange-400 hover:bg-orange-500/20 transition-all mb-2"
+          title="采购审批"
+        >
+          <FileText className="w-6 h-6" />
+          <span className="text-[10px]">审批</span>
+        </motion.button>
+      )}
 
       {currentUser && ROLE_PERMISSIONS[currentUser.role].canStartEmergency && (
         <motion.button

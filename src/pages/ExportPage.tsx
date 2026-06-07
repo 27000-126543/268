@@ -38,14 +38,22 @@ const ExportPage = () => {
           '训练场名称': trainingGround.name,
           '当前科目': trainingGround.currentSubject,
           '参训人数': trainingGround.participantCount,
-          '容量': trainingGround.capacity,
+          '总容量': trainingGround.capacity,
           '占用率(%)': trainingGround.occupancyRate,
+        },
+        {},
+        {
+          '训练场名称': '今日排课',
+          '当前科目': '科目',
+          '参训人数': '人数',
+          '总容量': '单位',
+          '占用率(%)': '时间',
         },
         ...trainingGround.schedule.map(s => ({
           '训练场名称': '',
           '当前科目': s.subject,
           '参训人数': s.participants,
-          '容量': s.unit,
+          '总容量': s.unit,
           '占用率(%)': `${s.startTime} - ${s.endTime}`,
         })),
       ];
@@ -75,20 +83,25 @@ const ExportPage = () => {
       const ws4 = XLSX.utils.json_to_sheet(guardData);
       XLSX.utils.book_append_sheet(wb, ws4, '岗哨统计');
 
+      const totalRooms = barracks.reduce((s, b) => s + b.rooms.length, 0);
+      const totalBeds = barracks.reduce((s, b) => s + b.rooms.reduce((s2, r) => s2 + r.maxBeds, 0), 0);
+      const totalOccupiedBeds = barracks.reduce((s, b) => s + b.rooms.reduce((s2, r) => s2 + r.bedOccupancy, 0), 0);
+      const avgOccupancy = totalRooms > 0 ? (totalOccupiedBeds / totalBeds * 100).toFixed(1) : '0';
+      const totalWeapons = armory.cabinets.reduce((s, c) => s + c.quantity, 0);
+      const maintenanceCount = armory.cabinets.filter(c => c.needsMaintenance).length;
+      const reliefCount = guardPosts.filter(g => g.needsRelief).length;
+
       const summaryData = [{
         '统计日期': selectedDate,
         '营房总数': barracks.length,
-        '房间总数': barracks.reduce((s, b) => s + b.rooms.length, 0),
-        '总床位数': barracks.reduce((s, b) => s + b.rooms.reduce((s2, r) => s2 + r.maxBeds, 0), 0),
-        '平均入住率(%)': (
-          barracks.reduce((s, b) =>
-            s + b.rooms.reduce((s2, r) => s2 + (r.bedOccupancy / r.maxBeds * 100), 0), 0) /
-          barracks.reduce((s, b) => s + b.rooms.length, 0)
-        ).toFixed(1),
-        '武器总数': armory.cabinets.reduce((s, c) => s + c.quantity, 0),
-        '待保养武器柜数': armory.cabinets.filter(c => c.needsMaintenance).length,
+        '房间总数': totalRooms,
+        '总床位数': totalBeds,
+        '已占用床位': totalOccupiedBeds,
+        '平均入住率(%)': avgOccupancy,
+        '武器总数': totalWeapons,
+        '待保养武器柜数': maintenanceCount,
         '岗哨总数': guardPosts.length,
-        '需换岗数': guardPosts.filter(g => g.needsRelief).length,
+        '需换岗数': reliefCount,
         '人员总数': soldiers.length,
       }];
       const ws5 = XLSX.utils.json_to_sheet(summaryData);
@@ -99,34 +112,42 @@ const ExportPage = () => {
     }, 1000);
   };
 
+  const totalRooms = barracks.reduce((s, b) => s + b.rooms.length, 0);
+  const totalBeds = barracks.reduce((s, b) => s + b.rooms.reduce((s2, r) => s2 + r.maxBeds, 0), 0);
+  const totalOccupiedBeds = barracks.reduce((s, b) => s + b.rooms.reduce((s2, r) => s2 + r.bedOccupancy, 0), 0);
+  const avgOccupancy = totalRooms > 0 ? ((totalOccupiedBeds / totalBeds) * 100).toFixed(0) : '0';
+  const totalWeapons = armory.cabinets.reduce((s, c) => s + c.quantity, 0);
+  const maintenanceCount = armory.cabinets.filter(c => c.needsMaintenance).length;
+  const reliefCount = guardPosts.filter(g => g.needsRelief).length;
+
   const stats = [
     {
       icon: Building2,
       label: '营房数量',
       value: barracks.length,
-      subtext: `${barracks.reduce((s, b) => s + b.rooms.length, 0)}个房间`,
+      subtext: `${totalRooms}个房间 · ${totalBeds}张床位`,
       color: 'text-military-400',
     },
     {
       icon: Target,
       label: '训练场使用',
       value: `${trainingGround.occupancyRate}%`,
-      subtext: `${trainingGround.participantCount}人参训`,
-      color: 'text-blue-400',
+      subtext: `${trainingGround.participantCount}/${trainingGround.capacity}人参训`,
+      color: trainingGround.occupancyRate >= 80 ? 'text-red-400' : 'text-blue-400',
     },
     {
       icon: Shield,
       label: '武器总数',
-      value: armory.cabinets.reduce((s, c) => s + c.quantity, 0),
-      subtext: `${armory.cabinets.filter(c => c.needsMaintenance).length}个待保养`,
-      color: 'text-orange-400',
+      value: totalWeapons,
+      subtext: `${maintenanceCount}个待保养`,
+      color: maintenanceCount > 0 ? 'text-orange-400' : 'text-green-400',
     },
     {
       icon: Users,
       label: '岗哨数量',
       value: guardPosts.length,
-      subtext: `${guardPosts.filter(g => g.needsRelief).length}个需换岗`,
-      color: 'text-green-400',
+      subtext: `${reliefCount}个需换岗`,
+      color: reliefCount > 0 ? 'text-orange-400' : 'text-green-400',
     },
   ];
 

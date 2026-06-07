@@ -1,7 +1,6 @@
 import { useRef, useEffect } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { OrbitControls, Sky, Stars } from '@react-three/drei';
-import { EffectComposer, Bloom } from '@react-three/postprocessing';
+import { OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
 
 import BarracksBuilding from './buildings/BarracksBuilding';
@@ -15,13 +14,12 @@ import SoldierModel from './personnel/SoldierModel';
 import { useBuildingStore } from '../store/useBuildingStore';
 import { usePersonnelStore } from '../store/usePersonnelStore';
 import { useEmergencyStore } from '../store/useEmergencyStore';
-import { FORBIDDEN_ZONES } from '../utils/constants';
-import { useBuildingStore as useBuildingStoreSelector } from '../store/useBuildingStore';
+import { FORBIDDEN_ZONES, EVACUATION_ROUTES, DANGER_ZONES } from '../utils/constants';
 
 function Ground() {
   return (
     <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
-      <planeGeometry args={[120, 120, 50, 50]} />
+      <planeGeometry args={[120, 120]} />
       <meshStandardMaterial color="#1a2a1a" />
     </mesh>
   );
@@ -121,44 +119,38 @@ function EmergencyOverlay() {
         );
       })}
 
-      {drill.evacuationRoutes.map((route) => (
-        <line key={route.id}>
-          <bufferGeometry>
-            <bufferAttribute
-              attach="attributes-position"
-              count={route.points.length}
-              array={new Float32Array(route.points.flatMap(p => [p.x, p.y, p.z]))}
-              itemSize={3}
-            />
-          </bufferGeometry>
-          <lineBasicMaterial color="#00A86B" linewidth={3} />
-        </line>
-      ))}
-
-      {drill.evacuationRoutes.map((route) => (
-        <group key={`arrow-${route.id}`}>
-          {route.points.slice(0, -1).map((point, i) => {
-            const nextPoint = route.points[i + 1];
-            return (
-              <mesh
-                key={i}
-                position={[point.x, point.y + 0.2, point.z]}
-                rotation={[
-                  Math.atan2(
-                    nextPoint.z - point.z,
-                    Math.sqrt(Math.pow(nextPoint.x - point.x, 2) + Math.pow(nextPoint.y - point.y, 2))
-                  ),
-                  0,
-                  -Math.atan2(nextPoint.x - point.x, nextPoint.y - point.y)
-                ]}
-              >
-                <coneGeometry args={[0.2, 0.4, 4]} />
-                <meshBasicMaterial color="#00A86B" />
-              </mesh>
-            );
-          })}
-        </group>
-      ))}
+      {drill.evacuationRoutes.map((route) => {
+        const points = route.points.map(p => new THREE.Vector3(p.x, p.y + 0.1, p.z));
+        const curve = new THREE.CatmullRomCurve3(points);
+        const tubeGeometry = new THREE.TubeGeometry(curve, 64, 0.15, 8, false);
+        
+        return (
+          <group key={route.id}>
+            <mesh geometry={tubeGeometry}>
+              <meshBasicMaterial color="#00A86B" transparent opacity={0.8} />
+            </mesh>
+            {points.slice(0, -1).map((point, i) => {
+              const nextPoint = points[i + 1];
+              const direction = new THREE.Vector3().subVectors(nextPoint, point).normalize();
+              const arrowPosition = point.clone().add(direction.multiplyScalar(0.5));
+              return (
+                <mesh
+                  key={i}
+                  position={[arrowPosition.x, arrowPosition.y + 0.3, arrowPosition.z]}
+                  rotation={[
+                    0,
+                    Math.atan2(nextPoint.x - point.x, nextPoint.z - point.z),
+                    0
+                  ]}
+                >
+                  <coneGeometry args={[0.25, 0.5, 4]} />
+                  <meshBasicMaterial color="#00A86B" />
+                </mesh>
+              );
+            })}
+          </group>
+        );
+      })}
     </group>
   );
 }
@@ -228,7 +220,7 @@ function SceneContent() {
 
   return (
     <>
-      <ambientLight intensity={0.4} />
+      <ambientLight intensity={0.5} />
       <directionalLight
         position={[50, 50, 25]}
         intensity={1}
@@ -236,9 +228,6 @@ function SceneContent() {
         shadow-mapSize-width={2048}
         shadow-mapSize-height={2048}
       />
-
-      <Sky sunPosition={[100, 20, 100]} />
-      <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
 
       <Ground />
       <Roads />
@@ -262,10 +251,6 @@ function SceneContent() {
 
       <SceneUpdater />
       <CameraController />
-
-      <EffectComposer>
-        <Bloom luminanceThreshold={0.2} luminanceSmoothing={0.9} height={300} />
-      </EffectComposer>
     </>
   );
 }
@@ -277,9 +262,11 @@ const CampusScene = () => {
     <div className="w-full h-full" onClick={() => setSelectedBuilding(null)}>
       <Canvas
         shadows
-        camera={{ position: [30, 25, 30], fov: 60 }}
+        camera={{ position: [35, 25, 35], fov: 55 }}
         gl={{ antialias: true }}
       >
+        <color attach="background" args={['#0a0f1a']} />
+        <fog attach="fog" args={['#0a0f1a', 50, 120]} />
         <OrbitControls
           enablePan={true}
           enableZoom={true}
