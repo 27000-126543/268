@@ -1,0 +1,121 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Noto Sans SC', sans-serif;
+  background-color: #0F0F1A;
+  color: #ffffff;
+  overflow: hidden;
+}
+
+#root {
+  width: 100vw;
+  height: 100vh;
+}
+
+/* 自定义滚动条 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(30, 58, 95, 0.2);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(44, 95, 45, 0.6);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(44, 95, 45, 0.8);
+}
+
+/* 玻璃拟态效果 */
+.glass-panel {
+  background: rgba(15, 15, 26, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(44, 95, 45, 0.3);
+}
+
+/* 发光边框动画 */
+@keyframes borderGlow {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(44, 95, 45, 0.5), inset 0 0 5px rgba(44, 95, 45, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 15px rgba(44, 95, 45, 0.8), inset 0 0 10px rgba(44, 95, 45, 0.2);
+  }
+}
+
+.border-glow {
+  animation: borderGlow 2s ease-in-out infinite;
+}
+
+/* 扫描线效果 */
+.scan-line::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #2C5F2D, transparent);
+  animation: scanLine 2s linear infinite;
+}
+
+@keyframes scanLine {
+  0% { top: 0; opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { top: 100%; opacity: 0; }
+}
+
+/* 数据流动效果 */
+.data-flow {
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(44, 95, 45, 0.3) 50%, 
+    transparent 100%);
+  background-size: 200% 100%;
+  animation: dataFlow 2s linear infinite;
+}
+
+@keyframes dataFlow {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* 脉冲效果 */
+.pulse-ring {
+  position: relative;
+}
+
+.pulse-ring::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: inherit;
+  border: 2px solid currentColor;
+  animation: pulseRing 1.5s ease-out infinite;
+}
+
+@keyframes pulseRing {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
